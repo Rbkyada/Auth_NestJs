@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  user
+}
+
+model Action {
+  id         Int      @id
+  name       String   @unique @db.VarChar(255)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  logs Log[]
+
+  @@map("actions")
+}
+
+model Log {
+  id           Int      @id @default(autoincrement())
+  action_id    Int
+  user_id      Int
+  request_data Json?    @db.Json
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  actions Action @relation(fields: [action_id], references: [id], onDelete: Cascade)
+  users   User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("logs")
+}
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  email              String    @unique
+  password           String?   @db.VarChar(255)
+  provider_id        String?   @db.VarChar(255)
+  provider           String?   @db.VarChar(255)
+  username           String?   @db.VarChar(255)
+  first_name         String?   @db.VarChar(255)
+  last_name          String?   @db.VarChar(255)
+  role               Role      @default(user)
+  logo               String?   @db.VarChar(255)
+  code               String?   @db.VarChar(255)
+  is_onboarded       Boolean   @default(false)
+  is_social_register Boolean   @default(false)
+  is_verified        Boolean   @default(false)
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @default(now()) @updatedAt
+  deleted_at         DateTime?
+
+  log Log[]
+
+  @@index([email])
+  @@index([username])
+  @@map("users")
+}
